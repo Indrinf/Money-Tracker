@@ -28,7 +28,7 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       appBar: (currentIndex == 0)
           ? CalendarAppBar(
-              accent: Colors.green,
+              accent: Colors.teal,
               backButton: false,
               locale: 'id',
               onDateChanged: (value) => print(value),
@@ -50,7 +50,7 @@ class _MainPageState extends State<MainPage> {
         visible: (currentIndex == 0) ? true : false,
         child: FloatingActionButton(
           onPressed: () {},
-          backgroundColor: Colors.green,
+          backgroundColor: Colors.teal,
           child: Icon(Icons.add),
         ),
       ),
