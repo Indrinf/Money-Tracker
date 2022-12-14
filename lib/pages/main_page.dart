@@ -5,6 +5,7 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:money_tracking/pages/category_page.dart';
 import 'package:money_tracking/pages/home_page.dart';
+import 'package:money_tracking/pages/transaction_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -49,7 +50,15 @@ class _MainPageState extends State<MainPage> {
       floatingActionButton: Visibility(
         visible: (currentIndex == 0) ? true : false,
         child: FloatingActionButton(
-          onPressed: () {},
+          onPressed: () {
+            Navigator.of(context)
+                .push(MaterialPageRoute(
+              builder: (context) => TransactionPage(),
+            ))
+                .then((value) {
+              setState(() {});
+            });
+          },
           backgroundColor: Colors.teal,
           child: Icon(Icons.add),
         ),
