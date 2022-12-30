@@ -56,4 +56,6 @@ Adapula kriteria individu yang cocok dengan aplikasi **Money Tracker** ini antar
 
 ## [Link Video Demo](https://youtu.be/40AJmVES71s)
 
-## [Link Pitch Deck]()
+## [Link Pitch Deck](https://www.canva.com/design/DAFWJRUJrZc/_NAVE5sMESoEqZWub2wugQ/view?utm_content=DAFWJRUJrZc&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton#1)
+
+## [Link Medium](https://medium.com/@1207050144/money-tracker-app-f70738f5c626)
