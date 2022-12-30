@@ -48,13 +48,11 @@ Adapula kriteria individu yang cocok dengan aplikasi **Money Tracker** ini antar
 
 ## Tampilan Aplikasi Money Tracker
 
-![Tampilan](/img/Pict-1.jpeg "Money Tracker")
+<img src="img/Pict-1.jpeg" width="128"/>
+<img src="img/Pict-2.jpeg" width="128"/>
 
-![Tampilan](/img/Pict-2.jpeg "Money Tracker")
-
-![Tampilan](/img/Pict-3.jpeg "Money Tracker")
-
-![Tampilan](/img/Pict-4.jpeg "Money Tracker")
+<img src="img/Pict-3.jpeg" width="128"/>
+<img src="img/Pict-4.jpeg" width="128"/>
 
 ## [Link Aplikasi](https://play.google.com/store/apps/details?id=com.group4ifc.moneytracker)
 
