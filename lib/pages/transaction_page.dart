@@ -1,200 +1,395 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:money_tracking/models/database.dart';
+import 'package:money_tracking/api_service.dart';
+import 'package:money_tracking/constant.dart';
+import 'package:money_tracking/models/income.dart';
+import 'package:money_tracking/models/outcome.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
-class TransactionPage extends StatefulWidget {
-  const TransactionPage({super.key});
+class Transaction extends StatefulWidget {
+  const Transaction({Key? key}) : super(key: key);
 
   @override
-  State<TransactionPage> createState() => _TransactionPageState();
+  _TransactionState createState() => _TransactionState();
 }
 
-class _TransactionPageState extends State<TransactionPage> {
-  final AppDb database = AppDb();
-  bool isExpense = true;
-  late int type;
-  List<String> list = ["Makan dan Jajan", "Transportasi", "Rekreasi"];
-  late String dropDownValue = list.first;
-  TextEditingController amountController = TextEditingController();
-  TextEditingController dateController = TextEditingController();
-  TextEditingController detailController = TextEditingController();
-  Category? selectedCategory;
-
-  Future insert(
-      int amount, DateTime date, String nameDetail, int categoryId) async {
-    DateTime now = DateTime.now();
-    final row = await database.into(database.transactions).insertReturning(
-        TransactionsCompanion.insert(
-            name: nameDetail,
-            category_id: categoryId,
-            transaction_date: date,
-            amount: amount,
-            createdAt: now,
-            updatedAt: now));
-    print("Ini APA : " + row.toString());
-    // ada insert ke database
-  }
-
-  Future<List<Category>> getAllCategory(int type) async {
-    return await database.getAllCategoryRepo(type);
-  }
+class _TransactionState extends State<Transaction> {
+  Income? income;
+  Outcome? outcome;
 
   @override
   void initState() {
     // TODO: implement initState
-    type = 2;
     super.initState();
+    getIncome();
+    getOutcome();
+  }
+
+  void getIncome() async {
+    ApiService.getIncome().then((value) {
+      setState(() {
+        income = value;
+      });
+    });
+  }
+
+  void getOutcome() async {
+    ApiService.getOutcome().then((value) {
+      setState(() {
+        outcome = value;
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Add Transaction")),
-      body: SingleChildScrollView(
-          child: SafeArea(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(
-            children: [
-              Switch(
-                value: isExpense,
-                onChanged: (bool value) {
-                  setState(() {
-                    isExpense = value;
-                    type = (isExpense) ? 2 : 1;
-                    selectedCategory = null;
-                  });
-                },
-                inactiveTrackColor: Colors.green[200],
-                inactiveThumbColor: Colors.green,
-                activeColor: Colors.red,
+    final simpleFormat = NumberFormat.simpleCurrency(
+      locale: 'id_ID',
+    );
+
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Transaction'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(
+                text: 'Income',
               ),
-              Text(
-                isExpense ? 'Expense' : 'Income',
-                style: GoogleFonts.montserrat(fontSize: 14),
-              )
+              Tab(
+                text: 'Expense',
+              ),
             ],
           ),
-          SizedBox(
-            height: 10,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextFormField(
-              controller: amountController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                  border: UnderlineInputBorder(), labelText: "Amount"),
-            ),
-          ),
-          SizedBox(
-            height: 25,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              "Category",
-              style: GoogleFonts.montserrat(fontSize: 14),
-            ),
-          ),
-          FutureBuilder<List<Category>>(
-              future: getAllCategory(type),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else {
-                  if (snapshot.hasData) {
-                    if (snapshot.data!.length > 0) {
-                      selectedCategory = snapshot.data!.first;
-                      print("Apanih" + snapshot.toString());
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: DropdownButton<Category>(
-                            value: (selectedCategory == null)
-                                ? snapshot.data!.first
-                                : selectedCategory,
-                            isExpanded: true,
-                            icon: Icon(Icons.arrow_downward),
-                            items: snapshot.data!.map((Category item) {
-                              return DropdownMenuItem<Category>(
-                                value: item,
-                                child: Text(item.name),
+        ),
+        body: TabBarView(
+          children: [
+            SingleChildScrollView(
+              child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(
+                                  20.0,
+                                ),
+                              ),
+                              padding: EdgeInsets.all(6.0),
+                              child: Icon(
+                                Icons.arrow_upward,
+                                size: 28.0,
+                                color: Colors.green[700],
+                              ),
+                              margin: EdgeInsets.only(right: 8.0),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Income",
+                                  style: TextStyle(
+                                    fontSize: 14.0,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                (income == null)
+                                    ? SizedBox(
+                                        height: 20.0,
+                                        width: 20.0,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(
+                                        simpleFormat.format(income!.total),
+                                        style: TextStyle(
+                                          fontSize: 20.0,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        height: 8.0,
+                      ),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount:
+                            (income == null) ? 0 : income!.income!.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            leading: Icon(
+                              Icons.arrow_upward,
+                              color: Colors.green,
+                            ),
+                            title: Text(
+                              income!.income![index].description,
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              income!.income![index].createdAt.substring(0, 10),
+                              style: TextStyle(
+                                fontSize: 14.0,
+                              ),
+                            ),
+                            trailing: Text(
+                              simpleFormat.format(
+                                income!.income![index].amount,
+                              ),
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            onLongPress: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: Text('Delete'),
+                                    content: Text(
+                                        'Are you sure want to delete this transaction?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text('Cancel'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          deleteIncome(
+                                            income!.income![index].id,
+                                          );
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text('Delete'),
+                                      ),
+                                    ],
+                                  );
+                                },
                               );
-                            }).toList(),
-                            onChanged: (Category? value) {
-                              setState(() {
-                                selectedCategory = value;
-                              });
-                            }),
-                      );
-                    } else {
-                      return Center(
-                        child: Text("Data Kosong"),
-                      );
-                    }
-                  } else {
-                    return Center(
-                      child: Text("Tidak ada data"),
-                    );
-                  }
-                }
-              }),
-          SizedBox(
-            height: 25,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextFormField(
-              readOnly: true,
-              controller: dateController,
-              decoration: InputDecoration(labelText: "Enter Date"),
-              onTap: () async {
-                DateTime? pickedDate = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime(2022),
-                    lastDate: DateTime(2099));
-
-                if (pickedDate != null) {
-                  String formattedDate =
-                      DateFormat('yyyy-MM-dd').format(pickedDate);
-
-                  dateController.text = formattedDate;
-                }
-              },
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  )),
             ),
-          ),
-          SizedBox(
-            height: 10,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: TextFormField(
-              controller: detailController,
-              decoration: InputDecoration(
-                  border: UnderlineInputBorder(), labelText: "Detail"),
+            SingleChildScrollView(
+              child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(8.0),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(20.0),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(
+                                  20.0,
+                                ),
+                              ),
+                              padding: EdgeInsets.all(6.0),
+                              child: Icon(
+                                Icons.arrow_downward,
+                                size: 28.0,
+                                color: Colors.red[700],
+                              ),
+                              margin: EdgeInsets.only(right: 8.0),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Expense",
+                                  style: TextStyle(
+                                    fontSize: 14.0,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                (outcome == null)
+                                    ? SizedBox(
+                                        height: 20.0,
+                                        width: 20.0,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : Text(
+                                        simpleFormat.format(outcome!.total),
+                                        style: TextStyle(
+                                          fontSize: 20.0,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        height: 8.0,
+                      ),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount:
+                            (outcome == null) ? 0 : outcome!.outcome!.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            leading: Icon(
+                              Icons.arrow_downward,
+                              color: Colors.red,
+                            ),
+                            title: Text(
+                              outcome!.outcome![index].description!,
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              outcome!.outcome![index].createdAt!
+                                  .substring(0, 10),
+                              style: TextStyle(
+                                fontSize: 14.0,
+                              ),
+                            ),
+                            trailing: Text(
+                              simpleFormat.format(
+                                outcome!.outcome![index].amount!,
+                              ),
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            onLongPress: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: Text('Delete'),
+                                    content: Text(
+                                        'Are you sure want to delete this transaction?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text('Cancel'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          deleteOutcome(
+                                            outcome!.outcome![index].id!,
+                                          );
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text('Delete'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  )),
             ),
-          ),
-          SizedBox(
-            height: 25,
-          ),
-          Center(
-              child: ElevatedButton(
-                  onPressed: () {
-                    insert(
-                        int.parse(amountController.text),
-                        DateTime.parse(dateController.text),
-                        detailController.text,
-                        selectedCategory!.id);
-                  },
-                  child: Text("Save")))
-        ]),
-      )),
+          ],
+        ),
+      ),
     );
+  }
+
+  void deleteIncome(int i) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString('token')!;
+    debugPrint(token);
+    var url =
+        Uri.https(Constant.baseUrl, '${Constant.incomeEndpoint}/delete/$i');
+    debugPrint(url.toString());
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Transaction deleted'),
+        ),
+      );
+      getIncome();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete transaction'),
+        ),
+      );
+    }
+  }
+
+  void deleteOutcome(int? id) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString('token')!;
+    debugPrint(token);
+    var url =
+        Uri.https(Constant.baseUrl, '${Constant.outcomeEndpoint}/delete/$id');
+    debugPrint(url.toString());
+    var response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Transaction deleted'),
+        ),
+      );
+      getOutcome();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete transaction'),
+        ),
+      );
+    }
   }
 }
